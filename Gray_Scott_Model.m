@@ -4,8 +4,8 @@
 rng(10);
 
 % Grid parameters
-GridSize_x = 200;
-GridSize_z = 200;
+GridSize_x = 300;
+GridSize_z = 300;
 
 % Reaction-diffusion model parameters
 f  = 0.036;     % Feed rate
@@ -36,6 +36,9 @@ for i = 1:NumSpots
     U(xrand-1:xrand+1, yrand-1:yrand+1) = 0;
 end
 
+% Waveguide width
+WG_width = 25;
+
 % Visualization counter
 cc = 1;
 
@@ -46,6 +49,15 @@ for i = 1:NumIterations
 
     U = U + dt * d_U .* laplacian(U) - UV2 + f .* (1 - U);
     V = V + dt * d_V .* laplacian(V) + UV2 - (f + k) .* V;
+
+    %Apply a geometric constraint during pattern evolution to define a 90° waveguiding path
+    V(floor(GridSize_x/2-WG_width/2):end, ...
+        floor(GridSize_z/2-WG_width/2):floor(GridSize_z/2+WG_width/2)) = 0;
+
+    V(floor(GridSize_x/2-WG_width/2):floor(GridSize_x/2+WG_width/2), ...
+        floor(GridSize_z/2):end) = 0;
+
+
 
     if mod(i, FrameSpacing(cc)) == 0
 
@@ -65,7 +77,7 @@ end
 
 % Thresholding
 Vn = V ./ max(abs(V(:)));
-rho = 0.2;
+rho = 0.15;
 binaryPattern = double(Vn > rho);
 
 figure(2);
@@ -84,3 +96,4 @@ L = -1 * F + ...
     0.05 * (circshift(F, [1  1]) + circshift(F, [1 -1]) + ...
     circshift(F, [-1  1]) + circshift(F, [-1 -1]));
 end
+
